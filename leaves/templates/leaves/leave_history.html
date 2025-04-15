@@ -1,0 +1,42 @@
+{% extends 'employee_base.html' %}
+{% block title %}Leave History{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Leave History</h2>
+    {% if leaves %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Leave Type</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Duration (Days)</th>  <th>Reason</th>
+                    <th>Status</th>
+                    <th>Applied At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for leave in leaves %}
+                    <tr>
+                        <td>{{ leave.get_leave_type_display }}</td>
+                        <td>{{ leave.start_date }}</td>
+                        <td>{{ leave.end_date }}</td>
+                        <td>{{ leave.duration }}</td>  <td>{{ leave.reason|default:"-" }}</td>  <td>{{ leave.get_status_display }}</td>
+                        <td>{{ leave.applied_at }}</td>
+                        <td>
+                            {% if leave.status == 'Pending' %}
+                                <a href="{% url 'leaves:update_leave' leave.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                                <a href="{% url 'leaves:cancel_leave' leave.pk %}" class="btn btn-sm btn-danger">Cancel</a>  {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No leave requests found.</p>
+    {% endif %}
+    <a href="{% url 'leaves:apply_leave' %}">Apply for Leave</a>
+</div>
+{% endblock %}

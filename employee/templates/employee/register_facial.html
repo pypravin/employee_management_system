@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Register Facial Data{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Facial Registration</h2>
+    <div class="card p-4 shadow-sm">
+        <h5>Employee Details</h5>
+        <p><strong>ID:</strong> {{ employee.display_employee_id }}</p>
+        <p><strong>Name:</strong> {{ employee.first_name }} {{ employee.last_name }}</p>
+        <p><strong>Department:</strong> {{ employee.department }}</p>
+        <p><strong>Designation:</strong> {{ employee.designation }}</p>
+        <p><strong>Email:</strong> {{ employee.work_email }}</p>
+
+        <button id="start-capture-btn" class="btn btn-primary">Start Facial Capture</button>
+    </div>
+</div>
+
+<script>
+    let employeeId = "{{ employee.display_employee_id }}";
+
+    document.getElementById("start-capture-btn").addEventListener("click", function () {
+        // Redirect to the capture_face view
+        window.location.href = `/employee/capture_face/${employeeId}/`;
+    });
+</script>
+
+{% endblock %}

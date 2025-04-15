@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Inactive Employees{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Inactive Employees</h2>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+            <tr>
+                <td>{{ employee.display_employee_id }}</td>
+                <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                <td>{{ employee.department.name }}</td>
+                <td>{{ employee.work_email }}</td>
+                <td>
+                    <form action="{% url 'employee:toggle_employee_status' employee.display_employee_id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">Activate</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No inactive employees found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'employee:employee_list' %}" class="btn btn-primary">Back to Employee List</a>
+</div>
+{% endblock %}

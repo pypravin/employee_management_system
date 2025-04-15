@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Report{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="mb-4">Attendance Report</h3>
+
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Chart Section -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">Attendance Overview</h5>
+        </div>
+        <div class="card-body" style="min-height: 400px;">
+            <canvas id="attendanceChart"></canvas>
+        </div>
+        <div class="card-footer">
+            <button id="downloadChart" class="btn btn-success btn-sm">Download Chart</button>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="card-title mb-0">Filter Records</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="department" class="form-label">Department</label>
+                    <select class="form-select" id="department" name="department">
+                        <option value="">All Departments</option>
+                        {% for department in departments %}
+                            <option value="{{ department.id }}">{{ department.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="startDate" name="start_date">
+                </div>
+                <div class="col-md-4">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="endDate" name="end_date">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h5 class="card-title mb-0">Attendance Records</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if attendance_records %}
+                            {% for record in attendance_records %}
+                            <tr>
+                                <td>{{ record.employee.id }}</td>
+                                <td>{{ record.employee.first_name }} {{ record.employee.last_name }}</td>
+                                <td>{{ record.employee.department.name }}</td>
+                                <td>{{ record.date }}</td>
+                                <td>{{ record.status }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No attendance records found</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer">
+            <button id="downloadTable" class="btn btn-success btn-sm">Download Table</button>
+        </div>
+    </div>
+</div>
+
+<!-- Pass JSON data to JavaScript -->
+{{ attendance_labels_json|json_script:"attendance-labels" }}
+{{ attendance_data_json|json_script:"attendance-data" }}
+
+<script>
+    // Retrieve JSON data from the script tags
+    var attendanceLabels = JSON.parse(document.getElementById('attendance-labels').textContent);
+    var attendanceData = JSON.parse(document.getElementById('attendance-data').textContent);
+
+    // Render the chart
+    var ctx = document.getElementById('attendanceChart').getContext('2d');
+    var attendanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: attendanceLabels,
+            datasets: [{
+                label: 'Number of Employees Present',
+                data: attendanceData,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    ticks: {
+                        autoSkip: false,
+                        maxRotation: 45,
+                        minRotation: 45
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Employee Attendance by Department'
+                },
+                tooltip: {
+                    enabled: true,
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        }
+    });
+
+    // Download Chart as Image
+    document.getElementById('downloadChart').addEventListener('click', function () {
+        const link = document.createElement('a');
+        link.download = 'attendance_chart.png';
+        link.href = attendanceChart.toBase64Image();
+        link.click();
+    });
+
+    // Download Table as CSV
+    document.getElementById('downloadTable').addEventListener('click', function () {
+        const rows = document.querySelectorAll('table tr');
+        let csv = [];
+        for (const row of rows) {
+            const rowData = [];
+            for (const cell of row.cells) {
+                rowData.push(cell.innerText);
+            }
+            csv.push(rowData.join(','));
+        }
+        const link = document.createElement('a');
+        link.download = 'attendance_table.csv';
+        link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv.join('\n'));
+        link.click();
+    });
+</script>
+{% endblock %}

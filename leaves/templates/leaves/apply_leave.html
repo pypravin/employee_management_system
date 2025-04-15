@@ -1,0 +1,137 @@
+{% extends 'employee_base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Apply for Leave</h2>
+
+    <form method="post" id="leaveForm">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <div class="mb-3">
+            <label class="form-label">Leave Type</label>
+            {{ form.leave_type }}
+            <div class="invalid-feedback" id="leave_type-error">
+                {% for error in form.leave_type.errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Start Date</label>
+            {{ form.start_date }}
+            <div class="invalid-feedback" id="start_date-error">
+                {% for error in form.start_date.errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">End Date</label>
+            {{ form.end_date }}
+            <div class="invalid-feedback" id="end_date-error">
+                {% for error in form.end_date.errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Reason (Optional)</label>
+            {{ form.reason }}
+            <div class="invalid-feedback" id="reason-error">
+                {% for error in form.reason.errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="{% url 'leaves:leave_history' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+<script>
+    // Your existing JavaScript code
+    document.addEventListener('DOMContentLoaded', function() {
+        const leaveForm = document.getElementById('leaveForm');
+        const startDateInput = document.getElementById('id_start_date');
+        const endDateInput = document.getElementById('id_end_date');
+        const reasonInput = document.getElementById('id_reason');
+        const leaveTypeInput = document.getElementById('id_leave_type');
+
+        function displayError(fieldId, message) {
+            const errorDiv = document.getElementById(fieldId + '-error');
+            errorDiv.textContent = message;
+            const inputField = document.getElementById('id_' + fieldId);
+            inputField.classList.add('is-invalid');
+        }
+
+        function clearError(fieldId) {
+            const errorDiv = document.getElementById(fieldId + '-error');
+            errorDiv.textContent = '';
+            const inputField = document.getElementById('id_' + fieldId);
+            inputField.classList.remove('is-invalid');
+        }
+
+        // Real-time validation for Start Date (simplified)
+        startDateInput.addEventListener('change', function() {
+            clearError('start_date');
+            if (endDateInput.value && new Date(endDateInput.value) < new Date(this.value)) {
+                displayError('end_date', 'End date cannot be before start date.');
+            }
+        });
+
+        // Real-time validation for End Date (simplified)
+        endDateInput.addEventListener('change', function() {
+            clearError('end_date');
+            if (startDateInput.value && new Date(this.value) < new Date(startDateInput.value)) {
+                displayError('end_date', 'End date cannot be before start date.');
+            }
+        });
+
+        // Real-time validation for Reason (no numeric or special characters)
+        reasonInput.addEventListener('input', function() {
+            clearError('reason');
+            const value = this.value;
+            const regex = /^[a-zA-Z\s]*$/; // Allows only letters and spaces
+            if (!regex.test(value)) {
+                displayError('reason', 'Reason should only contain letters and spaces.');
+                this.value = value.replace(/[^a-zA-Z\s]/g, ''); // Remove invalid characters
+            }
+        });
+
+        leaveTypeInput.addEventListener('change', function() {
+            clearError('leave_type');
+            if (!this.value) {
+                displayError('leave_type', 'Please select a leave type.');
+            }
+        });
+
+        leaveForm.addEventListener('submit', function(event) {
+            let hasErrors = false;
+            if (leaveTypeInput.value === '') {
+                displayError('leave_type', 'Please select a leave type.');
+                hasErrors = true;
+            }
+            if (startDateInput.value === '') {
+                displayError('start_date', 'Please select a start date.');
+                hasErrors = true;
+            }
+            if (endDateInput.value === '') {
+                displayError('end_date', 'Please select an end date.');
+                hasErrors = true;
+            }
+            if (reasonInput.value && !/^[a-zA-Z\s]*$/.test(reasonInput.value)) {
+                displayError('reason', 'Reason should only contain letters and spaces.');
+                hasErrors = true;
+            }
+
+            if (hasErrors) {
+                event.preventDefault(); // Prevent form submission
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Department List</h2>
+    <a href="{% url 'department:department_create' %}" class="btn btn-primary mb-3">Add Department</a>
+
+    {# Messages Display Section #}
+    {% if messages %}
+        {% for message in messages %}
+            {% if "department_create" in message.tags %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Success:</strong> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif "department_update" in message.tags %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <strong>Updated:</strong> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif "department_delete" in message.tags %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Deleted:</strong> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif "department_deactivate" in message.tags %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>Deactivated:</strong> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% elif "department_reactivate" in message.tags %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Reactivated:</strong> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% else %}
+                <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <table class="table table-bordered mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>S.N.</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for department in departments %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ department.name }}</td>
+                    <td>{{ department.description }}</td>
+                    <td>
+                        <a href="{% url 'department:department_update' department.id %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'department:department_delete' department.id %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </a>
+                        {% if department.is_active %}
+                            <a href="{% url 'department:deactivate_department' department.id %}" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-ban"></i> Deactivate
+                            </a>
+                        {% else %}
+                            <a href="{% url 'department:reactivate_department' department.id %}" class="btn btn-success btn-sm">
+                                <i class="fas fa-check"></i> Reactivate
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">No departments found</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-between">
+        <h2>Departments</h2>
+        <a href="{% url 'department:archived_departments' %}" class="btn btn-secondary">
+            <i class="fas fa-archive"></i> View Archived
+        </a>
+    </div>
+</div>
+{% endblock %}

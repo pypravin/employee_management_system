@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Notifications</h2>
+        {% if user.is_hr %}
+            <a href="{% url 'notifications:notification_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create Notification
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Filter & Search Form (Collapsible) -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <a class="btn btn-link text-dark" data-bs-toggle="collapse" href="#filterSection">
+                <i class="fas fa-filter"></i> Filter Notifications
+            </a>
+        </div>
+        <div id="filterSection" class="collapse show">
+            <div class="card-body">
+                <form method="GET" class="row g-2">
+                    <div class="col-md-4">
+                        <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search_query }}">
+                    </div>
+                    <div class="col-md-2">
+                        <select name="urgency" class="form-select">
+                            <option value="">All Urgencies</option>
+                            <option value="1" {% if urgency_filter == '1' %}selected{% endif %}>Urgent</option>
+                            <option value="0" {% if urgency_filter == '0' %}selected{% endif %}>Normal</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification List -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Urgency</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in notifications %}
+                        {% with notification=item.notification %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'notifications:notification_detail' notification.pk %}" class="text-decoration-none">
+                                    <strong>{{ notification.title }}</strong>
+                                </a>
+                                <br>
+                                <small class="text-muted">{{ notification.message|truncatechars:60 }}</small>
+                            </td>
+                            <td class="text-center">
+                                {% if notification.is_urgent %}
+                                    <span class="badge bg-danger">Urgent</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Normal</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ notification.created_at|date:"M d, Y h:i A" }}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{% url 'notifications:notification_detail' notification.pk %}">
+                                            <i class="fas fa-eye"></i> View
+                                        </a></li>
+                                        {% if user.is_staff %}
+                                            <li><a class="dropdown-item" href="{% url 'notifications:notification_update' notification.pk %}">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a></li>
+                                            <li>
+                                                <button class="dropdown-item text-danger delete-btn"
+    data-id="{{ notification.pk }}"
+    data-url="{% url 'notifications:notification_delete' notification.pk %}">
+    <i class="fas fa-trash"></i> Delete
+</button>
+
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No notifications found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-center mt-3">
+                {% if notifications.has_other_pages %}
+                    <ul class="pagination">
+                        {% if notifications.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">&laquo; First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ notifications.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item disabled">
+                            <span class="page-link">Page {{ notifications.number }} of {{ notifications.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if notifications.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ notifications.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ notifications.paginator.num_pages }}">Last &raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <!-- Notification Success/Error Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    {% if "Notification" in message.message %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this notification?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a id="confirmDeleteBtn" href="#" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.delete-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                window.location.href = this.getAttribute('data-url');
+            });
+        });
+    });
+    </script>
+    
+    
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "employee_base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center text-primary mb-4">{{ event.title }}</h2>
+    
+    <!-- Event Description -->
+    <div class="card shadow-sm border-light rounded mb-4">
+        <div class="card-body">
+            <p class="card-text">{{ event.description }}</p>
+        </div>
+    </div>
+    
+    <!-- Event Date -->
+    <p class="mb-3"><strong>Date:</strong> 
+        <span class="text-muted">{{ event.event_date }}</span>
+    </p>
+    
+    <!-- Event Venue -->
+    {% if event.venue %}
+        <p class="mb-3"><strong>Venue:</strong> 
+            <span class="text-muted">{{ event.venue }}</span>
+        </p>
+    {% endif %}
+    
+    
+    
+    <!-- Navigation -->
+    <div class="d-flex justify-content-between">
+        <a href="{% url 'employee_events' %}" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-arrow-left-circle"></i> Back to Events
+        </a>
+
+        {% if user in event.attendees.all %}
+            <!-- If the user is already registered for the event, disable the button -->
+            <button class="btn btn-primary btn-lg" disabled>
+                <i class="bi bi-check-circle"></i> Already Registered
+            </button>
+        {% else %}
+            <!-- Else show the register button -->
+            <a href="{% url 'notifications:register_for_event' event.id %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-check-circle"></i> Register for Event
+            </a>
+        {% endif %}
+        
+    </div>
+</div>
+{% endblock %}

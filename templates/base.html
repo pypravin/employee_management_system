@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}HR Portal{% endblock %}</title>
+
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        /* Custom Color Scheme */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --sidebar-color: #343a40;
+            --sidebar-hover-color: #007bff;
+            --text-color: #333;
+            --text-light-color: #fff;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-family: 'Arial', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 250px;
+            position: fixed;
+            height: 100vh;
+            background-color: var(--sidebar-color);
+            padding-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .sidebar a {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            color: var(--text-light-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .sidebar a:hover, .sidebar .active {
+            background-color: var(--sidebar-hover-color);
+            color: var(--text-light-color);
+            transform: translateX(5px);
+        }
+
+        .sidebar h4 {
+            color: var(--text-light-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar hr {
+            border-color: var(--text-light-color);
+        }
+
+        /* Main Content */
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .collapsed .sidebar {
+            margin-left: -250px;
+        }
+
+        .collapsed .content {
+            margin-left: 0;
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            background-color: var(--text-light-color);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .navbar-brand i {
+            margin-right: 10px;
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown-item {
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--primary-color);
+            color: var(--text-light-color);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        /* Cards */
+        .card {
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+
+            .content {
+                margin-left: 0;
+            }
+
+            .collapsed .sidebar {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <h4><i class="bi bi-building"></i> HR Portal</h4>
+    <hr>
+    <a href="{% url 'hr_portal:hr_dashboard' %}" class="nav-link" id="dashboard-link">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+    <a href="{% url 'employee:employee_list' %}" class="nav-link" id="employee-link">
+        <i class="bi bi-people"></i> Employee Management
+    </a>
+    <a href="{% url 'department:department_list' %}" class="nav-link" id="department-link">
+        <i class="bi bi-diagram-3"></i> Department Management
+    </a>
+    <a href="{% url 'attendance:attendance_list' %}" class="nav-link">
+        <i class="bi bi-calendar-check"></i> Attendance List
+    </a>
+    <a href="{% url 'hr_portal:hr_leave_list' %}" class="nav-link">
+        <i class="bi bi-calendar-minus"></i> Leaves
+    </a>
+    <a href="{% url 'report:report_dashboard' %}" class="nav-link">
+        <i class="bi bi-bar-chart"></i> Reports & Analytics
+    </a>
+    <a href="{% url 'notifications:notification_list' %}" class="nav-link" id="notifications-link">
+        <i class="bi bi-bell"></i> Notifications
+    </a>
+</div>
+
+<!-- Main Content -->
+<div class="content">
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'hr_portal:hr_dashboard' %}">
+                <i class="bi bi-list toggle-btn" id="toggle-sidebar"></i> HR Portal
+            </a>
+            <div class="ms-auto">
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i> {{ user.first_name }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#">Settings</a></li>
+                        <li><a class="dropdown-item" href="{% url 'hr_portal:universal_logout' %}">Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4 fade-in">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+<script>
+    // Toggle Sidebar
+    document.getElementById("toggle-sidebar").addEventListener("click", function() {
+        document.body.classList.toggle("collapsed");
+        localStorage.setItem("sidebarCollapsed", document.body.classList.contains("collapsed"));
+    });
+
+    // Restore sidebar state on page load
+    document.addEventListener("DOMContentLoaded", function () {
+        if (localStorage.getItem("sidebarCollapsed") === "true") {
+            document.body.classList.add("collapsed");
+        }
+
+        // Highlight Active Sidebar Link
+        let path = window.location.pathname;
+
+        document.querySelectorAll(".sidebar a").forEach(link => {
+            // Remove trailing slashes and compare exact paths
+            if (link.getAttribute("href").replace(/\/$/, "") === path.replace(/\/$/, "")) {
+                link.classList.add("active");
+            }
+        });
+
+        // Initialize Select2 for all dropdowns with the class 'select2'
+        $('.select2').select2({
+            placeholder: "Select an option",
+            allowClear: true,
+            width: '100%'
+        });
+
+        // Select All Attendees
+        const selectAllAttendees = document.getElementById("select_all_attendees");
+        const attendeesSelect = document.querySelector("select[name='attendees']");
+
+        if (selectAllAttendees && attendeesSelect) {
+            selectAllAttendees.addEventListener("change", function() {
+                const options = attendeesSelect.options;
+
+                for (let i = 0; i < options.length; i++) {
+                    options[i].selected = this.checked;
+                }
+
+                // Trigger Select2 update
+                $(attendeesSelect).trigger("change");
+
+                console.log(this.checked ? "✅ Selected All Attendees" : "❌ Deselected All Attendees");
+            });
+        }
+
+        // Select All Departments
+        const selectAllDepartments = document.getElementById("select_all_departments");
+        const departmentsSelect = document.querySelector("select[name='departments']");
+
+        if (selectAllDepartments && departmentsSelect) {
+            selectAllDepartments.addEventListener("change", function() {
+                const options = departmentsSelect.options;
+
+                for (let i = 0; i < options.length; i++) {
+                    options[i].selected = this.checked;
+                }
+
+                // Trigger Select2 update
+                $(departmentsSelect).trigger("change");
+
+                console.log(this.checked ? "✅ Selected All Departments" : "❌ Deselected All Departments");
+            });
+        }
+    });
+
+    // Initialize Flatpickr
+    if (document.querySelector(".flatpickr")) {
+        flatpickr(".flatpickr", {});
+    }
+</script>
+
+<!-- Block for extra JavaScript -->
+{% block extra_js %}
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Include Select2 CSS & JS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Initialize Select2
+    $('.select2').select2({
+        placeholder: "Select an option",
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Select All Attendees
+    const selectAllAttendees = document.getElementById("select_all_attendees");
+    const attendeesSelect = document.querySelector("select[name='attendees']");
+
+    if (selectAllAttendees && attendeesSelect) {
+        selectAllAttendees.addEventListener("change", function() {
+            const options = attendeesSelect.options;
+
+            for (let i = 0; i < options.length; i++) {
+                options[i].selected = this.checked;
+            }
+
+            // Trigger Select2 update
+            $(attendeesSelect).trigger("change");
+
+            console.log(this.checked ? "✅ Selected All Attendees" : "❌ Deselected All Attendees");
+        });
+    }
+
+    // Select All Departments
+    const selectAllDepartments = document.getElementById("select_all_departments");
+    const departmentsSelect = document.querySelector("select[name='departments']");
+
+    if (selectAllDepartments && departmentsSelect) {
+        selectAllDepartments.addEventListener("change", function() {
+            const options = departmentsSelect.options;
+
+            for (let i = 0; i < options.length; i++) {
+                options[i].selected = this.checked;
+            }
+
+            // Trigger Select2 update
+            $(departmentsSelect).trigger("change");
+
+            console.log(this.checked ? "✅ Selected All Departments" : "❌ Deselected All Departments");
+        });
+    }
+
+    // Log selected values on form submission
+    document.querySelector("form").addEventListener("submit", function(event) {
+        const selects = document.querySelectorAll("select.select2");
+
+        selects.forEach(select => {
+            const selectedValues = Array.from(select.selectedOptions).map(option => option.value);
+            console.log(`📌 Submitting: ${select.name}`, selectedValues);
+        });
+
+        console.log("🚀 Form Submitted Successfully!");
+    });
+});
+</script>
+{% endblock %}
+</body>
+</html>

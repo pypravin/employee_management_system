@@ -1,0 +1,25 @@
+{% extends 'employee_base.html' %}
+{% block title %}My Registered Events{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>My Registered Events</h1>
+    <hr>
+    {% if registered_events %}
+        <ul class="list-group">
+            {% for event in registered_events %}
+                <li class="list-group-item">
+                    <a href="{% url 'notifications:employee_event_detail' pk=event.id %}">{{ event.title }}</a>
+                    <p class="mb-0"><small class="text-muted">Date: {{ event.event_date|date:"F j, Y, g:i a" }}</small></p>
+                    <p class="mb-0"><small class="text-muted">Location: {{ event.location }}</small></p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You are not currently registered for any events.</p>
+    {% endif %}
+    <div class="mt-3">
+        <a href="{% url 'notifications:employee_event_list' %}" class="btn btn-secondary">Back to All Events</a>
+    </div>
+</div>
+{% endblock %}

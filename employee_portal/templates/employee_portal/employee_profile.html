@@ -1,0 +1,39 @@
+{% extends "employee_base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">My Profile</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Employee ID:</strong> {{ employee.display_employee_id }}</p>
+                    <p><strong>Name:</strong> {{ employee.first_name }} {{ employee.last_name }}</p>
+                    <p><strong>Email:</strong> {{ employee.work_email }}</p>
+                    <p><strong>Department:</strong> {{ employee.department.name }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Designation:</strong> {{ employee.designation }}</p>
+                    <p><strong>Hire Date:</strong> {{ employee.hire_date|date:"M d, Y" }}</p>
+                    <p><strong>Facial Enrollment:</strong> 
+                        {% if employee.facial_enrollment_status %}
+                            <span class="badge bg-success">Enrolled</span>
+                        {% else %}
+                            <span class="badge bg-danger">Not Enrolled</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="text-center ma-3">
+                <a href="{% url 'password_reset' %}" class="btn btn-warning">Reset Password</a>
+            </div>
+        </div>
+        
+    </div>
+    
+</div>
+{% endblock %}

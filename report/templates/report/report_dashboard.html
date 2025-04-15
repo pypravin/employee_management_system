@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4 fw-bold">HR Dashboard - Reports & Analytics</h2>
+
+    <!-- Summary Cards -->
+    <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+        <!-- Cards remain the same as before -->
+        <div class="col">
+            <div class="card shadow border-0 hover-scale text-center p-3">
+                <i class="bi bi-calendar-check fs-1 text-info"></i>
+                <h5 class="card-title mt-2">Attendance Summary</h5>
+                <p class="card-text">{{ total_attendance }} employees attended today</p>
+                <a href="{% url 'report:attendance_report' %}" class="btn btn-outline-info btn-sm">View Report</a>
+            </div>
+        </div>
+
+        <!-- Late Comers -->
+        <div class="col">
+            <div class="card shadow border-0 hover-scale text-center p-3">
+                <i class="bi bi-clock-history fs-1 text-warning"></i>
+                <h5 class="card-title mt-2">Late Comers</h5>
+                <p class="card-text">{{ total_late_comers }} employees arrived late</p>
+                <a href="{% url 'report:late_comer_report' %}" class="btn btn-outline-warning btn-sm">View Report</a>
+            </div>
+        </div>
+
+        <!-- Employee Performance -->
+        <div class="col">
+            <div class="card shadow border-0 hover-scale text-center p-3">
+                <i class="bi bi-graph-up fs-1 text-primary"></i>
+                <h5 class="card-title mt-2">Top Performers</h5>
+                <p class="card-text">{{ total_performance }} employees recognized</p>
+                <a href="{% url 'report:performance_report' %}" class="btn btn-outline-primary btn-sm">View Report</a>
+            </div>
+        </div>
+
+        <!-- Pending Leave Requests -->
+        <div class="col">
+            <div class="card shadow border-0 hover-scale text-center p-3">
+                <i class="bi bi-calendar-minus fs-1 text-danger"></i>
+                <h5 class="card-title mt-2">Pending Leaves</h5>
+                <p class="card-text">{{ total_pending_leaves }} requests awaiting approval</p>
+                <a href="{% url 'hr_portal:hr_leave_list' %}" class="btn btn-outline-danger btn-sm">View Requests</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row g-4">
+        <!-- Attendance Chart -->
+        <div class="col-md-6">
+            <div class="card shadow border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-3">7-Day Attendance Trend</h5>
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Chart -->
+        <div class="col-md-6">
+            <div class="card shadow border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-3">Top Performers</h5>
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Data -->
+{{ attendance_dates_json|json_script:"attendance-dates-data" }}
+{{ attendance_data_json|json_script:"attendance-data-data" }}
+{{ performance_names_json|json_script:"performance-names-data" }}
+{{ performance_scores_json|json_script:"performance-scores-data" }}
+
+<!-- Chart Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Parse JSON data
+    const attendanceDates = JSON.parse(document.getElementById('attendance-dates-data').textContent);
+    const attendanceData = JSON.parse(document.getElementById('attendance-data-data').textContent);
+    const performanceNames = JSON.parse(document.getElementById('performance-names-data').textContent);
+    const performanceScores = JSON.parse(document.getElementById('performance-scores-data').textContent);
+
+    // Attendance Chart
+    const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(attendanceCtx, {
+        type: 'line',
+        data: {
+            labels: attendanceDates,
+            datasets: [{
+                label: 'Employees Present',
+                data: attendanceData,
+                borderColor: '#17a2b8',
+                backgroundColor: 'rgba(23, 162, 184, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true,
+                pointBackgroundColor: '#17a2b8',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.raw}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#6c757d' }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: '#6c757d' },
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                    title: {
+                        display: true,
+                        text: 'Number of Employees',
+                        color: '#6c757d'
+                    }
+                }
+            }
+        }
+    });
+
+    // Performance Chart
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    new Chart(performanceCtx, {
+        type: 'bar',
+        data: {
+            labels: performanceNames.slice(0, 10), // Show top 10 performers
+            datasets: [{
+                label: 'Performance Score',
+                data: performanceScores.slice(0, 10),
+                backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                borderColor: 'rgba(13, 110, 253, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Score: ${context.raw}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { 
+                        color: '#6c757d',
+                        maxRotation: 45,
+                        minRotation: 30
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { color: '#6c757d' },
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                    title: {
+                        display: true,
+                        text: 'Performance Score (%)',
+                        color: '#6c757d'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+<style>
+    .card {
+        border-radius: 10px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .chart-container {
+        min-height: 300px;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,18 @@
+<div class="row">
+    <div class="col-md-6">
+        <h5>Employee Info</h5>
+        <p><strong>Name:</strong> {{ attendance.employee.first_name }} {{ attendance.employee.last_name }}</p>
+        <p><strong>Department:</strong> {{ attendance.employee.department }}</p>
+        <p><strong>Email:</strong> {{ attendance.employee.work_email }}</p>
+    </div>
+    <div class="col-md-6">
+        <h5>Attendance Details</h5>
+        <p><strong>Date:</strong> {{ attendance.date }}</p>
+        <p><strong>Time In:</strong> {{ attendance.time_in|default:"--" }}</p>
+        <p><strong>Time Out:</strong> {{ attendance.time_out|default:"--" }}</p>
+        <p><strong>Method:</strong> {{ attendance.method }}</p>
+        {% if attendance.method == "Facial" %}
+        <p><strong>Image:</strong></p>
+        <img src="{{ attendance.face_image.url }}" class="img-thumbnail" alt="Facial Recognition">  {% endif %}
+    </div>
+</div>

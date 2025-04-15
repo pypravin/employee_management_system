@@ -1,0 +1,11 @@
+{% extends 'employee_base.html' %}
+
+{% block title %}Notification Detail{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{{ notification.notification.title }}</h1>
+    <p>{{ notification.notification.message }}</p>
+    <small>Received on {{ notification.notification.created_at|date:"F d, Y" }}</small>
+</div>
+{% endblock %}

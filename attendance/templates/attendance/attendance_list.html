@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% block title %}Attendance List{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Attendance List</h2>
+
+    <!-- Filter Section -->
+    <div class="card shadow-sm p-3 mb-4">
+        <form id="attendanceFilterForm" method="GET">
+            <div class="row g-3 align-items-end">
+                <!-- Date Range Filter -->
+                <div class="col-md-4">
+                    <label for="date_range" class="form-label">Date Range</label>
+                    <input type="text" class="form-control flatpickr" id="date_range" name="date_range" placeholder="Select Date Range" value="{{ request.GET.date_range }}">
+                </div>
+                
+                <!-- Employee Search -->
+                <div class="col-md-4">
+                    <label for="employee_search" class="form-label">Employee</label>
+                    <input type="text" class="form-control" id="employee_search" name="employee_search" placeholder="Search by Name" value="{{ request.GET.employee_search }}">
+                </div>
+
+                <!-- Department Filter -->
+                <div class="col-md-3">
+                    <label for="department" class="form-label">Department</label>
+                    <select class="form-select" id="department" name="department">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Search Button -->
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i></button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{% url 'attendance:trigger_face_recognition' %}" class="btn btn-success" id="startAttendanceButton">
+            <i class="bi bi-play-circle"></i> Start Attendance
+        </a>
+    </div>
+    
+    <!-- Attendance Table -->
+    <div class="table-responsive">
+        <table class="table table-striped align-middle" id="attendance-table">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Date</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                    <th>Status</th>
+                    <th>Method</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in attendance_records %}
+                <tr>
+                    <td>{{ forloop.counter0|add:attendance_records.start_index }}</td>
+                    <td>{{ record.employee.first_name }} {{ record.employee.last_name }}</td>
+                    <td>{{ record.employee.department.name }}</td>
+                    <td>{{ record.date|date:"Y-m-d" }}</td>
+                    <td>{{ record.time_in|time:"H:i"|default:"-" }}</td>
+                    <td>{{ record.time_out|time:"H:i"|default:"-" }}</td>
+                    <td>
+                        {% if record.employee.is_on_leave %}
+                            <span class="badge bg-warning">On Leave</span>
+                        {% elif record.status == "Late" %}
+                            <span class="badge bg-danger">Late</span>
+                        {% elif record.status == "On Time" %}
+                            <span class="badge bg-success">On Time</span>
+                        {% elif record.status == "Absent" %}
+                            <span class="badge bg-secondary">Absent</span>
+                        {% else %}
+                            <span class="badge bg-info">{{ record.status|default:"Pending" }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if record.method|lower == "facial recognition" %}
+                            <span class="badge bg-success">Facial</span>
+                        {% else %}
+                            <span class="badge bg-primary">Manual</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-info btn-sm view-details" data-bs-toggle="modal" data-bs-target="#detailsModal" 
+                            data-id="{{ record.id }}"
+                            data-name="{{ record.employee.first_name }} {{ record.employee.last_name }}"
+                            data-department="{{ record.employee.department.name }}"
+                            data-date="{{ record.date|date:'Y-m-d' }}"
+                            data-timein="{{ record.time_in|time:'H:i'|default:'-' }}"
+                            data-timeout="{{ record.time_out|time:'H:i'|default:'-' }}"
+                            data-status="{% if record.employee.is_on_leave %}On Leave{% else %}{{ record.status|default:'Pending' }}{% endif %}"
+                            data-method="{{ record.method }}"
+                            {% if record.method == "facial" %}
+                                data-image="{{ record.face_image.url }}"
+                            {% else %}
+                                data-image=""
+                            {% endif %}>
+                            <i class="bi bi-eye"></i> View
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted">No attendance records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if attendance_records.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&laquo; First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ attendance_records.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                </li>
+            {% endif %}
+            
+            <li class="page-item disabled">
+                <span class="page-link">
+                    Page {{ attendance_records.number }} of {{ attendance_records.paginator.num_pages }}
+                </span>
+            </li>
+            
+            {% if attendance_records.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ attendance_records.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ attendance_records.paginator.num_pages }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Last &raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+
+<!-- Attendance Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Attendance Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalContent">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 id="detail-name"></h5>
+                        <p><strong>Department:</strong> <span id="detail-dept"></span></p>
+                        <p><strong>Date:</strong> <span id="detail-date"></span></p>
+                        <p><strong>Time In:</strong> <span id="detail-timein"></span></p>
+                        <p><strong>Time Out:</strong> <span id="detail-timeout"></span></p>
+                        <p><strong>Status:</strong> <span id="detail-status"></span></p>
+                        <p><strong>Method:</strong> <span id="detail-method"></span></p>
+                    </div>
+                    <div class="col-md-6 text-center" id="detail-image-container">
+                        <!-- Image will be inserted here if available -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // View details button
+    document.querySelectorAll(".view-details").forEach(button => {
+        button.addEventListener("click", function () {
+            // Get details from button's dataset
+            const name = this.dataset.name;
+            const department = this.dataset.department;
+            const date = this.dataset.date;
+            const timeIn = this.dataset.timein;
+            const timeOut = this.dataset.timeout;
+            const status = this.dataset.status;
+            const method = this.dataset.method;
+            const image = this.dataset.image;
+            
+            // Update modal content
+            document.getElementById('detail-name').textContent = name;
+            document.getElementById('detail-dept').textContent = department;
+            document.getElementById('detail-date').textContent = date;
+            document.getElementById('detail-timein').textContent = timeIn;
+            document.getElementById('detail-timeout').textContent = timeOut;
+            
+            // Set status with appropriate badge
+            const statusElement = document.getElementById('detail-status');
+            statusElement.innerHTML = '';
+            const statusBadge = document.createElement('span');
+            statusBadge.className = 'badge ' + 
+                (status === 'On Leave' ? 'bg-warning' : 
+                 status === 'Late' ? 'bg-danger' : 
+                 status === 'On Time' ? 'bg-success' : 
+                 status === 'Absent' ? 'bg-secondary' : 'bg-info');
+            statusBadge.textContent = status;
+            statusElement.appendChild(statusBadge);
+            
+            // Set method with appropriate badge
+            const methodElement = document.getElementById('detail-method');
+            methodElement.innerHTML = '';
+            const methodBadge = document.createElement('span');
+            methodBadge.className = 'badge ' + (method === 'Facial Recognition' ? 'bg-success' : 'bg-primary');
+            methodBadge.textContent = method === 'Facial Recognition' ? 'Facial' : 'Manual';
+            methodElement.appendChild(methodBadge);
+            
+            // Handle image display
+            const imageContainer = document.getElementById('detail-image-container');
+            imageContainer.innerHTML = '';
+            if (image) {
+                const img = document.createElement('img');
+                img.src = image;
+                img.alt = 'Attendance Image';
+                img.className = 'img-fluid rounded border';
+                img.style.maxHeight = '300px';
+                imageContainer.appendChild(img);
+            } else {
+                imageContainer.innerHTML = '<p class="text-muted">No image available</p>';
+            }
+        });
+    });
+    
+    // Preserve filter parameters in pagination links
+    const filterForm = document.getElementById('attendanceFilterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            const pageInput = document.createElement('input');
+            pageInput.type = 'hidden';
+            pageInput.name = 'page';
+            pageInput.value = '1';
+            this.appendChild(pageInput);
+        });
+    }
+});
+</script>
+{% endblock %}

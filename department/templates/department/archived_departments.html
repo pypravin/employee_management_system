@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Archived Departments</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for department in archived_departments %}  <!-- Ensure correct variable name -->
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ department.name }}</td>
+                    <td>{{ department.description }}</td>
+                    <td>{{ department.created_at|date:"Y-m-d" }}</td>
+                    <td>
+                        <a href="{% url 'department:reactivate_department' department.id %}" class="btn btn-success btn-sm">Reactivate</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No archived departments found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'department:department_list' %}" class="btn btn-primary mb-3">Go Back to Department List</a>
+    {% if messages %} {% for message in messages %}
+  <div
+    class="alert alert-{{ message.tags }} alert-dismissible fade show"
+    role="alert"
+  >
+    {{ message }}
+    <button
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="alert"
+      aria-label="Close"
+    ></button>
+  </div>
+  {% endfor %} {% endif %}
+</div>
+{% endblock %}
+
+
+{% block extra_js %}  <script>
+    document.addEventListener('DOMContentLoaded', (event) => { // Ensure DOM is loaded
+        const searchInput = document.getElementById("search"); // Get the search input
+        if (searchInput) { // Check if the element exists
+            searchInput.addEventListener("keyup", function() {
+                let searchText = this.value.toLowerCase();
+                let rows = document.querySelectorAll("#departmentTable tbody tr"); // Target table body rows
+
+                rows.forEach(row => {
+                    let nameCell = row.cells[1]; // Get the name cell
+                    if (nameCell) { // Check if the cell exists
+                        let name = nameCell.textContent.toLowerCase();
+                        row.style.display = name.includes(searchText) ? "" : "none";
+                    }
+                });
+            });
+        }
+
+    });
+</script>
+{% endblock %}

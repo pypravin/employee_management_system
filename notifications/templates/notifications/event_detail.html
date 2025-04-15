@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Event Details</h2>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">{{ event.title }}</h3>
+            <p class="card-text">{{ event.description }}</p>
+            <p class="card-text">Event Date & Time: {{ event.event_date }}</p>
+            <p class="card-text">Location: {{ event.location }}</p>
+            {% if event.banner %}
+                <img src="{{ event.banner.url }}" alt="Event Banner" class="img-fluid mt-3">
+            {% endif %}
+            <!-- Attendees List -->
+    {% if event.attendees.all %}
+    <div class="mb-4">
+        <p><strong>Attendees:</strong></p>
+        <ul class="list-group">
+            {% for attendee in event.attendees.all %}
+                <li class="list-group-item">
+                    {{ attendee }}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% else %}
+    <p class="text-muted">No attendees yet.</p>
+{% endif %}
+            <a href="{% url 'notifications:event_list' %}" class="btn btn-secondary">Back to Events</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

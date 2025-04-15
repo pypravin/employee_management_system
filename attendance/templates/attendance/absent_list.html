@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Absent Employees - {{ today|date:"Y-m-d" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Absent Employees on {{ today|date:"Y-m-d" }}</h2>
+
+    {% if absent_employees %}
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Employee ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in absent_employees %}
+                <tr>
+                    <td>{{ employee.display_employee_id }}</td>
+                    <td>{{ employee.first_name }}</td>
+                    <td>{{ employee.last_name }}</td>
+                    <td>{{ employee.department.name }}</td>
+                    <td>{{ employee.designation }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="lead">No employees are absent today.</p>
+    {% endif %}
+</div>
+{% endblock %}

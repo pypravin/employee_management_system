@@ -1,0 +1,36 @@
+{% extends 'employee_base.html' %}
+
+{% block title %}{{ notification.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-body">
+            <h3 class="fw-bold">{{ notification.title }}</h3>
+            <p class="text-muted">Received on {{ notification.created_at|date:"F d, Y" }}</p>
+            <hr>
+            <p>{{ notification.message }}</p>
+
+            {% if event %}
+                <!-- If Notification is Linked to an Event -->
+                <hr>
+                <h5 class="text-primary">Event Details</h5>
+                <p><strong>Event Name:</strong> {{ event.title }}</p>
+                <p><strong>Date:</strong> {{ event.event_date }}</p>
+                <p><strong>Location:</strong> {{ event.location }}</p>
+                
+                <!-- Register for Event Button -->
+                <a href="{% url 'notifications:register_for_event' event.id %}" class="btn btn-success">
+                    <i class="bi bi-person-check"></i> Register for Event
+                </a>
+            {% endif %}
+
+            <!-- Back to Dashboard Button -->
+            <br>
+            <a href="{% url 'employee_portal:employee_dashboard' %}" class="btn btn-secondary mt-3">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

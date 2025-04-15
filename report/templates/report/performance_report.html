@@ -1,0 +1,158 @@
+{% extends 'base.html' %} 
+{% block title %}Performance Report{% endblock %} 
+
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-4">Performance Report</h3>
+
+  <!-- Filter Section -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-4">
+          <label for="department" class="form-label fw-bold">Department</label>
+          <select name="department" id="department" class="form-select select2">
+            <option value="">All Departments</option>
+            {% for department in departments %}
+            <option value="{{ department.id }}">{{ department.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="col-md-4">
+          <label for="employee_search" class="form-label fw-bold">Employee Name</label>
+          <input type="text" name="employee_search" id="employee_search" class="form-control" placeholder="Search Employee...">
+        </div>
+        <div class="col-md-12 text-end">
+          <button type="submit" class="btn btn-primary mt-2">Apply Filters</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Performance Cards -->
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for employee in employees %}
+    <div class="col">
+      <div class="card h-100 shadow-sm hover-scale">
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ employee.full_name }}</h5>
+          <p class="card-text text-muted">{{ employee.designation }}</p>
+          <div class="d-flex align-items-center justify-content-center mb-3">
+            <strong class="me-2">Performance:</strong>
+            <div class="progress flex-grow-1" style="height: 18px; max-width: 200px;">
+              <div
+                class="progress-bar {% if employee.calculate_performance >= 80 %}bg-success{% elif employee.calculate_performance >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                role="progressbar"
+                {% if employee.calculate_performance is not none %}style="width: {{ employee.calculate_performance|default:0|floatformat:0 }}%;"{% endif %}
+              >
+                {{ employee.calculate_performance|default:0|floatformat:0 }}%
+              </div>
+            </div>
+          </div>
+          <p class="fw-bold">
+            {% if employee.calculate_performance >= 80 %}🔥 Excellent {% elif employee.calculate_performance >= 50 %}⚡ Good {% else %}⚠ Needs Improvement {% endif %}
+          </p>
+          <a href="{% url 'employee:employee_detail' employee.id %}" class="btn btn-outline-primary btn-sm">View Details</a>
+
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center">
+          <p class="card-text text-muted">No employees found.</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Radar Chart for Performance Scores -->
+  <div class="card mt-5 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title mb-4">Performance Overview</h5>
+      <canvas id="performanceChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Embed JSON data -->
+{{ performance_labels|json_script:"performance-labels-data" }}
+{{ performance_scores|json_script:"performance-scores-data" }}
+
+<!-- Scripts for Graphs & Filters -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+<script>
+  // Initialize Select2 for better dropdowns
+  $(document).ready(function () {
+    $(".select2").select2();
+  });
+
+  // Retrieve JSON data
+  const performanceLabels = JSON.parse(document.getElementById("performance-labels-data").textContent);
+  const performanceScores = JSON.parse(document.getElementById("performance-scores-data").textContent);
+
+  // Radar Chart
+  var ctx = document.getElementById("performanceChart").getContext("2d");
+  var performanceChart = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: performanceLabels, // Employee names
+      datasets: [
+        {
+          label: "Performance Scores",
+          data: performanceScores, // Scores
+          backgroundColor: "rgba(54, 162, 235, 0.2)",
+          borderColor: "rgba(54, 162, 235, 1)",
+          borderWidth: 2,
+          pointBackgroundColor: "rgba(54, 162, 235, 1)"
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+        },
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return `Score: ${context.raw}`;
+            },
+          },
+        },
+      },
+    },
+  });
+</script>
+
+<style>
+  /* Improved Hover Effect */
+  .hover-scale {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .hover-scale:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Stylish Progress Bar */
+  .progress-bar {
+    font-size: 12px;
+    line-height: 18px;
+  }
+
+  /* Select2 Enhancements */
+  .select2-container .select2-selection--single {
+    height: 38px;
+    padding: 6px;
+  }
+</style>
+{% endblock %}

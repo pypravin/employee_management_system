@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h3>Facial Registration Failed</h3>
+    <p>The facial registration process was interrupted before completion.</p>
+    <a href="{% url 'employee:register_facial' employee.display_employee_id %}" class="btn btn-danger">Retry</a>
+</div>
+{% endblock %}

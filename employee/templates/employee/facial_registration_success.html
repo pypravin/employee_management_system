@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <div class="alert alert-success">
+        <h2>Facial Registration Completed!</h2>
+        <p>Employee <strong>{{ employee.first_name }} {{ employee.last_name }}</strong>'s facial data has been successfully registered.</p>
+        <p>An email with login credentials has been sent to <strong>{{ employee.work_email }}</strong>.</p>
+        <a href="{% url 'employee:employee_list' %}" class="btn btn-primary mt-3">View Employee List</a>
+    </div>
+</div>
+{% endblock %}

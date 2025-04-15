@@ -1,0 +1,24 @@
+{% extends 'employee_base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Notification Details</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if notification %}
+        <h3>{{ notification.title }}</h3>
+        <p>{{ notification.message }}</p>
+        <p><strong>Created At:</strong> {{ notification.created_at|date:"F d, Y" }}</p>
+        <a href="{% url 'notifications:employee_notification' %}" class="btn btn-secondary">Back to Notifications</a>
+    {% else %}
+        <p>Notification not found.</p>
+    {% endif %}
+</div>
+{% endblock %}

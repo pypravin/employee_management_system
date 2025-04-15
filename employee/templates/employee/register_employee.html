@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Register Employee{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Register Employee</h2>
+    <form method="post" class="card p-4 shadow-sm" id="employee-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById("employee-form");
+    
+        // Validate First Name
+        const firstNameInput = form.querySelector("#id_first_name");
+        firstNameInput.addEventListener("input", function(event) {
+            event.target.value = event.target.value.replace(/\d/g, ''); // Remove numbers
+        });
+    
+        // Validate Last Name
+        const lastNameInput = form.querySelector("#id_last_name");
+        lastNameInput.addEventListener("input", function(event) {
+            event.target.value = event.target.value.replace(/\d/g, ''); // Remove numbers
+        });
+    
+        // Validate Hire Date (not in the past)
+        const hireDateInput = form.querySelector("#id_hire_date");
+        hireDateInput.addEventListener("change", function(event) {
+            const selectedDate = new Date(event.target.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (selectedDate < today) {
+                event.target.setCustomValidity("Hire date cannot be in the past.");
+            } else {
+                event.target.setCustomValidity("");
+            }
+        });
+    
+        // Validate Designation (allow letters, spaces, and hyphens)
+        const designationInput = form.querySelector("#id_designation");
+        designationInput.addEventListener("input", function(event) {
+            event.target.value = event.target.value.replace(/[^a-zA-Z\s-]/g, ''); // Allow only letters, spaces, and hyphens
+        });
+    
+        // Validate Work Email (must match allowed domains)
+        const workEmailInput = form.querySelector("#id_work_email");
+workEmailInput.addEventListener("input", function(event) {
+    const value = event.target.value;
+    const allowedDomains = ["@yourcompany.com", "@anotheralloweddomain.net","@gmail.com","@hotamil.com"]; // Update this list
+    if (value && !allowedDomains.some(domain => value.endsWith(domain))) {
+        event.target.setCustomValidity("Work email must be a valid company email (e.g., user@yourcompany.com).");
+    } else {
+        event.target.setCustomValidity("");
+    }
+});
+    });
+    </script>
+    
+{% endblock %}

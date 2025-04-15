@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ title }}</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                {# Display non-field errors (global form errors) #}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    {{ form.name.label_tag }}
+                    {# Render input field with error class if errors exist #}
+                    {% if form.name.errors %}
+                        {{ form.name|add_class:"form-control is-invalid" }}
+                    {% else %}
+                        {{ form.name|add_class:"form-control" }}
+                    {% endif %}
+                    {% for error in form.name.errors %}
+                        <div class="invalid-feedback">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.description.label_tag }}
+                    {# Render input field with error class if errors exist #}
+                    {% if form.description.errors %}
+                        {{ form.description|add_class:"form-control is-invalid" }}
+                    {% else %}
+                        {{ form.description|add_class:"form-control" }}
+                    {% endif %}
+                    {% for error in form.description.errors %}
+                        <div class="invalid-feedback">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success me-2">Save</button>
+                    <a href="{% url 'department:department_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        {# Display Django messages (Success/Error Notifications) #}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

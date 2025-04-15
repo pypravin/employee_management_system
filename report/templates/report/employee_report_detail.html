@@ -1,0 +1,31 @@
+<!-- employee_report_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}Employee Detail{% endblock %}
+
+{% block content %}
+<h2>Employee Detail</h2>
+<table class="table">
+    <tr>
+        <th>ID</th>
+        <td>{{ employee.id }}</td>
+    </tr>
+    <tr>
+        <th>Name</th>
+        <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+    </tr>
+    <tr>
+        <th>Email</th>
+        <td>{{ employee.work_email }}</td>
+    </tr>
+    <tr>
+        <th>Department</th>
+        <td>{{ employee.department.name }}</td>
+    </tr>
+    <tr>
+        <th>Attendance Status</th>
+        <td>{{ employee.attendance_status }}</td>
+    </tr>
+</table>
+<a href="{% url 'report:employee_report' %}" class="btn btn-secondary">Back to Report</a>
+{% endblock %}

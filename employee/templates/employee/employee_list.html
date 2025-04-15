@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Employee List{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Employee List</h2>
+    {% for message in messages %}
+    {% if "delete_success" in message.tags %}
+      <div class="alert alert-success">{{ message }}</div>
+    {% elif "restore_success" in message.tags %}
+      <div class="alert alert-info">{{ message }}</div>
+    {% endif %}
+  {% endfor %}
+    <!-- Search & Filter -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{% url 'employee:register_employee' %}" class="btn btn-success">Add Employee</a>
+
+        <form method="GET" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" placeholder="Search by name or email..." value="{{ request.GET.search }}">
+            <select name="department" class="form-select me-2">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                    {{ dept.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+    </div>
+
+    <!-- Employee Table -->
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th><a href="?sort=id">ID</a></th>
+                <th><a href="?sort=name">Name</a></th>
+                <th><a href="?sort=department">Department</a></th>
+                <th><a href="?sort=designation">Designation</a></th>
+                <th>Facial Enrolled</th>
+                <th>Leave Balance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+            <tr>
+                <td>{{ employee.display_employee_id }}</td>
+                <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                <td>{{ employee.department }}</td>
+                <td>{{ employee.designation }}</td>
+                <td>
+                    {% if employee.is_facial_enrolled %}
+                        ✅
+                    {% else %}
+                        ❌
+                    {% endif %}
+                </td>
+                <td>{{ employee.total_leave_balance }}</td>
+
+
+                <td>
+                    <a href="{% url 'employee:employee_detail' employee.id %}" class="btn btn-outline-primary btn-sm">View Details</a>
+
+                    <a href="{% url 'employee:employee_edit' employee.display_employee_id %}" class="btn btn-sm btn-warning" title="Edit">✏️</a>
+                    <a href="{% url 'employee:toggle_employee_status' employee.display_employee_id %}" 
+                       class="btn btn-sm {% if employee.is_active %}btn-danger{% else %}btn-success{% endif %}" 
+                       title="{% if employee.is_active %}Deactivate{% else %}Activate{% endif %}">
+                       {% if employee.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </a>
+                </td>
+                
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No employees found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    {% if employees.has_other_pages %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if employees.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ employees.previous_page_number }}">Previous</a></li>
+            {% endif %}
+
+            <li class="page-item active"><span class="page-link">{{ employees.number }}</span></li>
+
+            {% if employees.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ employees.next_page_number }}">Next</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ employees.paginator.num_pages }}">Last</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

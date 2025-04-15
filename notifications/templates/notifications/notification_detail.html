@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Notification Details</h2>
+    <div class="card shadow">
+        <div class="card-body">
+            <h3 class="card-title">{{ notification.title }}</h3>
+            <p class="card-text">{{ notification.message }}</p>
+            <p class="card-text"><strong>Created At:</strong> {{ notification.created_at }}</p>
+            <p class="card-text">
+                <strong>Urgency:</strong> 
+                {% if notification.is_urgent %}
+                    <span class="badge bg-danger">Urgent</span>
+                {% else %}
+                    <span class="badge bg-secondary">Normal</span>
+                {% endif %}
+            </p>
+
+            <!-- Read/Unread Recipients -->
+            <h4>Recipients</h4>
+            <ul class="list-group mb-3">
+                {% for user in read_by %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-success">✔ {{ user.first_name }} {{ user.last_name }} (Read)</span>
+                    </li>
+                {% endfor %}
+                {% for user in unread_by %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-danger">✘ {{ user.first_name }} {{ user.last_name }} (Unread)</span>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <!-- Buttons -->
+            <a href="{% url 'notifications:notification_list' %}" class="btn btn-secondary">Back to Notifications</a>
+            {% if user.is_staff %}
+                <a href="{% url 'notifications:notification_update' notification.id %}" class="btn btn-primary">Edit</a>
+                <a href="{% url 'notifications:notification_delete' notification.id %}" class="btn btn-danger">Delete</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

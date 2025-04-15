@@ -1,0 +1,19 @@
+{% extends "employee_base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center text-primary mb-4">Events You Are Registered For</h2>
+
+    <div class="list-group">
+        {% for event in events %}
+            <a href="{% url 'employee_event_detail' event.id %}" class="list-group-item list-group-item-action">
+                <h5 class="mb-1">{{ event.title }}</h5>
+                <p class="mb-1">{{ event.event_date }}</p>
+                <small>{{ event.venue }}</small>
+            </a>
+        {% empty %}
+            <p>No events to show.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

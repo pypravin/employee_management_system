@@ -1,0 +1,48 @@
+{% extends 'employee_base.html' %}
+{% block title %}Latest Notifications | Employee Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4 mb-4">Latest Notifications</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-warning">Recent Notifications</h6>
+        </div>
+        <div class="card-body">
+            {% if latest_notifications %}
+                <ul class="list-unstyled">
+                    {% for notification_recipient in latest_notifications %}
+                        <li class="mb-3 border-bottom pb-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{% url 'notifications:view_employee_notification' notification_id=notification_recipient.id %}" class="text-decoration-none text-dark">
+                                    <strong>{{ notification_recipient.notification.title }}</strong>
+                                    {% if not notification_recipient.is_read %}
+                                        <span class="badge bg-info ms-1">New</span>
+                                    {% endif %}
+                                </a>
+                                <br>
+                                <small class="text-muted">Received on {{ notification_recipient.notification.created_at|date:"F d, Y h:i A" }}</small>
+                                <p class="mt-1">{{ notification_recipient.notification.body|truncatechars:100 }}</p>
+                            </div>
+                            <form method="post" action="{% url 'notifications:mark_notification_as_read' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="notification_id" value="{{ notification_recipient.notification.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Mark as Read</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <div class="text-center mt-3">
+                    <a href="{% url 'employee_portal:employee_dashboard' %}" class="btn btn-outline-warning btn-sm">View All Notifications</a>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-bell-slash text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No recent notifications.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

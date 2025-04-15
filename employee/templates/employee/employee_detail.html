@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Employee Details</h2>
+    <table class="table">
+        <tr><th>Employee ID</th><td>{{ employee.display_employee_id }}</td></tr>  
+        <tr><th>Name</th><td>{{ employee.first_name }} {{ employee.last_name }}</td></tr>
+        <tr><th>Department</th><td>{{ employee.department }}</td></tr>
+        <tr><th>Designation</th><td>{{ employee.designation }}</td></tr>
+        <tr><th>Hire Date</th><td>{{ employee.hire_date }}</td></tr>
+        <tr><th>Email</th><td>{{ employee.work_email }}</td></tr>
+        <tr><th>Annual Leave Balance</th><td>{{ employee.annual_leave_balance }}</td></tr>
+        <tr><th>Sick Leave Balance</th><td>{{ employee.sick_leave_balance }}</td></tr>
+        <tr>
+            <th>Status</th>
+            <td>
+                {% if employee.is_deleted %}
+                    <span class="badge bg-danger">Inactive</span>
+                {% else %}
+                    <span class="badge bg-success">Active</span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <div class="d-flex gap-2 mt-3">
+        {% if not employee.facial_enrollment_status %}
+            <a href="{% url 'employee:capture_face' employee.display_employee_id %}" class="btn btn-primary">Register Facial Data</a> 
+        {% else %}
+            <button class="btn btn-success" disabled>Facial Data Registered</button>
+        {% endif %}
+    
+        <a href="{% url 'employee:employee_edit' employee.display_employee_id %}" class="btn btn-warning">Edit Details</a>
+        
+        <!-- Activate/Deactivate Button -->
+        <form action="{% url 'employee:toggle_employee_status' employee.display_employee_id %}" method="POST">
+            {% csrf_token %}
+            {% if employee.is_deleted %}
+                <button type="submit" class="btn btn-success">Activate</button>
+            {% else %}
+                <button type="submit" class="btn btn-danger">Deactivate</button>
+            {% endif %}
+        </form>
+
+        <a href="{% url 'employee:employee_list' %}" class="btn btn-secondary">Back to List</a>
+    </div>
+
+    {% for message in messages %}
+        {% if "edit_success" in message.tags %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}

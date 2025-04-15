@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Facial Recognition Attendance{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h2 class="fw-bold">Face Recognition Attendance</h2>
+    <p class="text-muted">Click the button to start face recognition.</p>
+
+    <button id="start-recognition-btn" class="btn btn-primary btn-lg">
+        <i class="fas fa-camera"></i> Start Face Recognition
+    </button>
+    
+    <div id="loading-message" class="mt-3 text-info fw-semibold" style="display: none;">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        Processing... Please wait.
+    </div>
+
+    <p id="error-message" class="mt-3 text-danger fw-bold"></p> <!-- Error message for face recognition -->
+</div>
+
+<script>
+document.getElementById("start-recognition-btn").addEventListener("click", async function() {
+    let button = this;
+    let errorMessage = document.getElementById("error-message");
+    let loadingMessage = document.getElementById("loading-message");
+
+    // Reset UI states
+    errorMessage.textContent = "";
+    loadingMessage.style.display = "block";
+    button.disabled = true;  // Disable button to prevent multiple clicks
+
+    try {
+        let response = await fetch("{% url 'attendance:trigger_face_recognition' %}");
+
+        if (!response.ok) {
+            throw new Error("Server error: " + response.status);
+        }
+
+        let data = await response.json();
+        loadingMessage.style.display = "none";  // Hide loading message
+
+        if (!data.success) {
+            errorMessage.textContent = data.message || "Face not recognized. Redirecting to manual attendance...";
+            setTimeout(() => {
+                window.location.href = "{% url 'attendance:manual_attendance' %}";
+            }, 2000); // Redirect after 2 seconds
+        } else {
+            setTimeout(() => {
+                window.location.href = data.redirect_url;
+            }, 2000); // Redirect after 2 seconds
+        }
+    } catch (error) {
+        loadingMessage.style.display = "none";  // Hide loading message
+        errorMessage.textContent = "Error starting face recognition. Redirecting to manual attendance...";
+        console.error("Error:", error);
+        
+        setTimeout(() => {
+            window.location.href = "{% url 'attendance:manual_attendance' %}";
+        }, 2000); // Redirect after 2 seconds
+    } finally {
+        button.disabled = false;  // Re-enable button
+    }
+});
+</script>
+{% endblock %}
