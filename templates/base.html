@@ -186,7 +186,7 @@
     <h4><i class="bi bi-building"></i> HR Portal</h4>
     <hr>
     <a href="{% url 'hr_portal:hr_dashboard' %}" class="nav-link" id="dashboard-link">
-        <i class="bi bi-speedometer2"></i> Dashboard
+        <i class="bi bi-speedometer2"></i> Dashboardz
     </a>
     <a href="{% url 'employee:employee_list' %}" class="nav-link" id="employee-link">
         <i class="bi bi-people"></i> Employee Management
@@ -199,6 +199,9 @@
     </a>
     <a href="{% url 'hr_portal:hr_leave_list' %}" class="nav-link">
         <i class="bi bi-calendar-minus"></i> Leaves
+        {% if pending_leave_count > 0 %}
+        <span class="badge bg-danger">{{ pending_leave_count }}</span>
+        {% endif %}
     </a>
     <a href="{% url 'report:report_dashboard' %}" class="nav-link">
         <i class="bi bi-bar-chart"></i> Reports & Analytics

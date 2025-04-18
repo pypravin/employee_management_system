@@ -83,12 +83,17 @@ def hr_dashboard(request):
     # 4. Number of Employees Absent Today
     absent_today_count = total_employees - attended_today_count - on_leave_today_count
 
+    # **New: Count of Pending Leave Requests**
+    pending_leave_count = Leave.objects.filter(status='Pending').count()
+
     # Prepare summary data for the cards
     summary_data = [
         {'title': 'Total Employees', 'count': total_employees, 'label': '', 'icon': 'bi bi-people', 'color': 'primary', 'view_url': 'employee:employee_list'},
         {'title': 'Attendance Today', 'count': attended_today_count, 'label': '', 'icon': 'bi bi-check-circle-fill', 'color': 'success', 'view_url': 'attendance:attendance_list'},
         {'title': 'Absent Today', 'count': absent_today_count, 'label': '', 'icon': 'bi bi-x-circle-fill', 'color': 'danger', 'view_url': 'attendance:absent_list'},
         {'title': 'On Leave Today', 'count': on_leave_today_count, 'label': '', 'icon': 'bi bi-sun-fill', 'color': 'warning', 'view_url': 'hr_portal:hr_leave_list'},
+        # **Optional: Add a card for pending leaves**
+        {'title': 'Pending Leaves', 'count': pending_leave_count, 'label': 'Requests', 'icon': 'bi bi-hourglass-split', 'color': 'info', 'view_url': 'hr_portal:hr_leave_list'},
     ]
 
     # 5. Data for Attendance by Department Chart
@@ -125,8 +130,9 @@ def hr_dashboard(request):
         'department_names': json.dumps(department_names),
         'department_attendance_data': json.dumps(department_attendance_percentages),
         'performance_data': json.dumps(performance_data),
+        'pending_leave_count': pending_leave_count, # Pass the count to the template
     }
-    return render(request, 'hr_portal/hr_dashboard.html', context) 
+    return render(request, 'hr_portal/hr_dashboard.html', context)
 
 
 @login_required

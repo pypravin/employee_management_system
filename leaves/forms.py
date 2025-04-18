@@ -24,31 +24,47 @@ class LeaveRequestForm(forms.ModelForm):
         cleaned_data = super().clean()
         start_date = cleaned_data.get("start_date")
         end_date = cleaned_data.get("end_date")
-        print(f"Start Date from Form: {start_date}")
-        print(f"Today's Date (Server Time): {timezone.now().date()}")
+
+        today = timezone.now().date()
 
         if not self.user:
             raise forms.ValidationError("User must be authenticated to request leave.")
 
         if start_date and end_date:
-            if start_date > end_date:
-                raise forms.ValidationError("End date cannot be before start date.")
-            if start_date < timezone.now().date():
+            # 1. Check start_date is not in the past
+            if start_date < today:
                 raise forms.ValidationError("Start date cannot be in the past.")
-            if end_date < timezone.now().date():
-                raise forms.ValidationError("End date cannot be in the past.")
 
-            # Check for overlapping leave requests
+            # 2. Check end_date is not before start_date
+            if end_date < start_date:
+                raise forms.ValidationError("End date cannot be before start date.")
+
+            # 3. Check start_date is not more than 7 days in the future
+            if (start_date - today).days > 7:
+                raise forms.ValidationError("Start date cannot be more than 7 days in the future.")
+
+            # 4. Check duration does not exceed 7 days
+            duration = (end_date - start_date).days + 1
+            if duration > 7:
+                raise forms.ValidationError("Leave duration cannot exceed 7 days.")
+
+            # 5. Check start_date and end_date are not Saturdays
+            if start_date.weekday() == 5:  # 5 = Saturday
+                raise forms.ValidationError("Start date cannot be a Saturday.")
+            if end_date.weekday() == 5:
+                raise forms.ValidationError("End date cannot be a Saturday.")
+
+            # 6. Check for overlapping leaves
             employee = self.instance.employee if self.instance.pk else self.user
 
-            existing_leaves = Leave.objects.filter(
+            overlapping_leaves = Leave.objects.filter(
                 employee=employee,
                 start_date__lte=end_date,
                 end_date__gte=start_date,
                 status__in=['Pending', 'Approved']
             ).exclude(pk=self.instance.pk if self.instance.pk else None)
 
-            if existing_leaves.exists():
-                raise forms.ValidationError("You already have a leave request for these dates.")
+            if overlapping_leaves.exists():
+                raise forms.ValidationError("You already have an existing leave that overlaps with these dates.")
 
         return cleaned_data
