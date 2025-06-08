@@ -33,10 +33,10 @@ def is_hr_or_admin(user):
         if user.is_superuser:  # Check for superuser (admin) status
             return True
         try:
-            employee = Employee.objects.get(work_email=user.work_email)  # Assuming email is used to link User and Employee
-            return employee.is_hr  # Check if the employee is marked as HR
+            employee = Employee.objects.get(work_email=user.work_email) 
+            return employee.is_hr  
         except Employee.DoesNotExist:
-            return False  # If no Employee found with this email, not HR
+            return False  
     return False
 
 def hr_or_admin_required(view_func):
@@ -74,7 +74,7 @@ def register_facial(request, employee_id):
     return render(request, "employee/register_facial.html", {"employee": employee, "angles": ANGLES})
 
 
-@user_passes_test(lambda u: u.is_hr or u.is_staff) # Corrected decorator for clarity
+@user_passes_test(lambda u: u.is_hr or u.is_staff) 
 def capture_face(request, employee_id):
     employee = get_object_or_404(Employee, display_employee_id=employee_id)
     angle_index = int(request.GET.get('angle_index', 0))
@@ -86,7 +86,8 @@ def capture_face(request, employee_id):
         employee.save()
         username = employee.work_email
         temp_password = "".join(random.choices(string.ascii_letters + string.digits, k=10))
-        # Assuming send_welcome_email is defined elsewhere
+
+       
         send_welcome_email(employee, username, temp_password)
         return render(request, "employee/facial_registration_success.html", {"employee": employee})
 
@@ -95,8 +96,7 @@ def capture_face(request, employee_id):
     # Initialize OpenCV cascades
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
     eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml")
-    # Optional: Load another face cascade for potentially better detection
-    # face_cascade_alt = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_profileface.xml")
+   
 
     cap = cv2.VideoCapture(0)
 
@@ -117,22 +117,11 @@ def capture_face(request, employee_id):
         faces = face_cascade.detectMultiScale(
             gray,
             scaleFactor=1.1,
-            minNeighbors=5,  # Increased minNeighbors to reduce false positives
+            minNeighbors=7,  # Increased minNeighbors to reduce false positives
             minSize=(min_face_size, min_face_size),
             maxSize=(max_face_size, max_face_size)
         )
 
-        # # Optional: Detect faces using the alternative cascade as well
-        # faces_alt = face_cascade_alt.detectMultiScale(
-        #     gray,
-        #     scaleFactor=1.1,
-        #     minNeighbors=5,
-        #     minSize=(min_face_size, min_face_size),
-        #     maxSize=(max_face_size, max_face_size)
-        # )
-        # # Combine the detected faces (remove duplicates if needed)
-        # all_faces = list(faces) + list(faces_alt)
-        # # To remove duplicates, you might need to convert to tuples and use a set
 
         # Draw text with the current angle instruction
         cv2.putText(frame, f"Angle: {current_angle}", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
@@ -212,7 +201,7 @@ def send_welcome_email(employee, username, temp_password):
         f"🔹 Temporary Password: {temp_password}\n\n"
         f"Please login and reset your password immediately.\n\n"
         f"🔗 Employee Portal: http://127.0.0.1:8000/\n\n"
-        f"Best Regards,\nHR Department\nS and S Steels"
+        f"Best Regards,\nHR Department\n"
     )
     print(f"📧 Sending welcome email to {employee.work_email} and password {temp_password}")
 

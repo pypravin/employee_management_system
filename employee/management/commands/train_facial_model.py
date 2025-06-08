@@ -4,6 +4,8 @@ import os
 from django.conf import settings
 from employee.models import Employee
 from django.core.management.base import BaseCommand
+
+
 class Command(BaseCommand):
     help = 'Trains the facial recognition model'
 
@@ -11,10 +13,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Starting model training...'))
         data_dir = os.path.join(settings.MEDIA_ROOT, "facial_data")
         recognizer = cv2.face.LBPHFaceRecognizer_create()
-        faces =[]
-        labels =[]
+        faces = []
+        labels = []
 
-        employee_ids =[]
+        employee_ids = []
         for employee in Employee.objects.all():
             if employee.display_employee_id not in employee_ids:
                 employee_ids.append(employee.display_employee_id)
@@ -31,7 +33,7 @@ class Command(BaseCommand):
                             image_path = os.path.join(employee_path, filename)
                             img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
                             if img is not None:
-                                resized_img = cv2.resize(img, (100, 100)) 
+                                resized_img = cv2.resize(img, (100, 100))
                                 faces.append(resized_img)
                                 labels.append(label)
         if faces:
@@ -39,6 +41,8 @@ class Command(BaseCommand):
             recognizer.train(faces, np.array(labels))
             model_path = os.path.join(settings.BASE_DIR, 'trained_model.yml')
             recognizer.save(model_path)
-            self.stdout.write(self.style.SUCCESS(f"Model trained and saved to {model_path}"))
+            self.stdout.write(self.style.SUCCESS(
+                f"Model trained and saved to {model_path}"))
         else:
-            self.stdout.write(self.style.WARNING("No facial data found for training."))
+            self.stdout.write(self.style.WARNING(
+                "No facial data found for training."))
