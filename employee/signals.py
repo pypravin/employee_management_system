@@ -7,10 +7,7 @@ from .models import Employee
 
 @receiver(post_delete, sender=Employee)
 def handle_employee_deletion(sender, instance, **kwargs):
-    """
-    Deletes the corresponding User instance and the employee's facial data folder
-    when an Employee is deleted.
-    """
+   
     # 🔹 Delete the associated User instance
     try:
         user = User.objects.get(username=instance.display_employee_id)
