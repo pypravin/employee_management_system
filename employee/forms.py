@@ -10,6 +10,12 @@ class EmployeeForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
+    is_edit = False 
+
+    def __init__(self, *args, **kwargs):
+        self.is_edit = kwargs.pop('is_edit', False)  
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = Employee
         fields = [
@@ -42,7 +48,7 @@ class EmployeeForm(forms.ModelForm):
         designation = self.cleaned_data.get("designation")
         if not designation:
             raise forms.ValidationError("Designation is required.")
-        if re.search(r"[^a-zA-Z\s]", designation):  # Allows only letters and spaces
+        if re.search(r"[^a-zA-Z\s]", designation):  
             raise forms.ValidationError("Designation should not contain numbers or special characters.")
         return designation
 
@@ -54,7 +60,12 @@ class EmployeeForm(forms.ModelForm):
 
         work_email = work_email.strip().lower()
 
-        allowed_domains = ["yourcompany.com", "anotheralloweddomain.net","gmail.com","hotmail.com"]  # Update this list
+        allowed_domains = [
+            "yourcompany.com", 
+            "anotheralloweddomain.net",
+            "gmail.com",
+            "hotmail.com"
+        ]
 
         domain = work_email.split("@")[-1]
 
@@ -68,8 +79,11 @@ class EmployeeForm(forms.ModelForm):
     def clean_hire_date(self):
         hire_date = self.cleaned_data.get("hire_date")
         today = timezone.now().date()
-        if hire_date and hire_date < today:
+
+        # Only apply restriction if NOT editing
+        if not self.is_edit and hire_date and hire_date < today:
             raise forms.ValidationError("Hire date cannot be in the past.")
+
         return hire_date
 
     def clean_annual_leave_balance(self):

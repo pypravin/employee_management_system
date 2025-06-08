@@ -151,7 +151,8 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_HOST_USER = "hamrohr.webapp@gmail.com"
 EMAIL_HOST_PASSWORD = "psop hhcv njfx pigr"
-EMAIL_FROM = "Employee Management System <  [email protected] >"
+EMAIL_FROM = "Employee Management System <hamrohr.webapp@gmail.com>"
+
 
 
 LOGGING = {

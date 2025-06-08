@@ -33,7 +33,7 @@
                     <div class="row mb-3">
                         <div class="col">
                             <label for="time_in" class="form-label">Time In:</label>
-                            <input type="time" id="time_in" name="time_in" class="form-control" required>
+                            <input type="time" id="time_in" name="time_in" class="form-control">
                         </div>
                         <div class="col">
                             <label for="time_out" class="form-label">Time Out:</label>
@@ -55,111 +55,13 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
 
+<script>
 $(document).ready(function () {
     let today = new Date().toISOString().split("T")[0];
-
-    // Restrict date selection to only today
     $("#date").val(today).attr("min", today).attr("max", today);
 
-    $("#attendanceForm").submit(function (event) {
-        let selectedDate = $("#date").val();
-        if (selectedDate !== today) {
-            alert("❌ You can only record attendance for today.");
-            event.preventDefault();
-        }
-    });
-});
-
-</script>
-<script>
-$(document).ready(function () {
-    $("#employeeSearch").on("input", function () {
-        let query = $(this).val().trim();
-        let resultsBox = $("#searchResults");
-
-        resultsBox.empty().hide();
-
-        if (query.length > 0) {
-            resultsBox.append("<a class='dropdown-item disabled'>Loading...</a>").show();
-
-            $.ajax({
-                url: "{% url 'attendance:search_employee' %}",
-                data: { q: query },
-                dataType: "json",
-                success: function (data) {
-                    resultsBox.empty();
-
-                    if (data.length > 0) {
-                        data.forEach(function (employee) {
-                            let item = $("<a>")
-                                .addClass("dropdown-item")
-                                .html(`<strong>${employee.first_name} ${employee.last_name}</strong> <br> <small class="text-muted">${employee.department}</small>`)
-                                .attr("href", "javascript:void(0);")
-                                .click(function () {
-                                    $("#employeeSearch").val(`${employee.first_name} ${employee.last_name}`);
-                                    $("#selectedEmployeeName").text(`${employee.first_name} ${employee.last_name}`);
-                                    $("#attendanceDetails").show();
-                                    resultsBox.hide();
-                                    $("#employeeId").val(employee.id);
-
-                                    // Fetch Attendance Record
-                                    $.ajax({
-                                        url: "{% url 'attendance:get_employee_attendance' %}",
-                                        data: { employee_id: employee.id },
-                                        dataType: "json",
-                                        success: function (attendanceData) {
-                                            if (attendanceData.time_in) {
-                                                $("#time_in").val(attendanceData.time_in).prop("disabled", true);
-                                                $("#status").val("Checked In");
-
-                                                if (attendanceData.time_out) {
-                                                    $("#time_out").val(attendanceData.time_out).prop("disabled", true);
-                                                    $("#status").val("Checked Out");
-                                                } else {
-                                                    $("#time_out").prop("disabled", false);
-                                                }
-                                            } else {
-                                                $("#time_in").prop("disabled", false);
-                                                $("#time_out").prop("disabled", true);
-                                                $("#status").val("Not Checked In");
-                                            }
-                                        },
-                                        error: function () {
-                                            $("#time_in, #time_out").prop("disabled", false);
-                                            $("#status").val("No Record Found");
-                                        }
-                                    });
-                                });
-                            resultsBox.append(item);
-                        });
-                        resultsBox.show();
-                    } else {
-                        resultsBox.append("<a class='dropdown-item disabled'>No results found</a>").show();
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error("❌ Error Fetching Employees:", error);
-                    resultsBox.append("<a class='dropdown-item disabled'>Error fetching results</a>").show();
-                }
-            });
-        } else {
-            $("#attendanceDetails").hide();
-            $("#searchResults").hide();
-        }
-    });
-
-    $(document).on("click", function (e) {
-        if (!$(e.target).closest("#employeeSearch, #searchResults, #searchButton").length) {
-            $("#searchResults").hide();
-        }
-    });
-
-    $("#searchButton").click(function () {
-        $("#employeeSearch").trigger("input");
-    });
-
+    // Attendance submission
     $("#attendanceForm").submit(function (event) {
         event.preventDefault();
         $.ajax({
@@ -170,10 +72,32 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.success) {
                     alert("✅ Attendance recorded successfully!");
-                    $("#attendanceForm")[0].reset();
-                    $("#attendanceDetails").hide();
-                    $("#employeeSearch").val("");
-                } else if (response.error) { // Check for a single error message
+
+                    let employeeId = $("#employeeId").val();
+                    $.ajax({
+                        url: "{% url 'attendance:get_employee_attendance' %}",
+                        data: { employee_id: employeeId },
+                        dataType: "json",
+                        success: function (attendanceData) {
+                            const timeIn = attendanceData.time_in;
+                            const timeOut = attendanceData.time_out;
+
+                            if (timeIn && timeOut) {
+                                $("#time_in").val(timeIn).prop("disabled", true);
+                                $("#time_out").val(timeOut).prop("disabled", true);
+                                $("#status").val("Checked Out");
+                            } else if (timeIn) {
+                                $("#time_in").val(timeIn).prop("disabled", true);
+                                $("#time_out").val("").prop("disabled", false);
+                                $("#status").val("Checked In");
+                            } else {
+                                $("#time_in").val("").prop("disabled", false);
+                                $("#time_out").val("").prop("disabled", true);
+                                $("#status").val("Not Checked In");
+                            }
+                        }
+                    });
+                } else if (response.error) {
                     alert(`⚠ Error: ${response.error}`);
                 } else if (response.errors) {
                     for (let field in response.errors) {
@@ -192,7 +116,91 @@ $(document).ready(function () {
             }
         });
     });
+
+    // Employee search
+    $("#employeeSearch").on("input", function () {
+        let query = $(this).val().trim();
+        let resultsBox = $("#searchResults");
+
+        resultsBox.empty().hide();
+
+        if (query.length > 0) {
+            resultsBox.append("<a class='dropdown-item disabled'>Loading...</a>").show();
+
+            $.ajax({
+                url: "{% url 'attendance:search_employee' %}",
+                data: { q: query },
+                dataType: "json",
+                success: function (data) {
+                    resultsBox.empty();
+                    if (data.length > 0) {
+                        data.forEach(function (employee) {
+                            let item = $("<a>")
+                                .addClass("dropdown-item")
+                                .html(`<strong>${employee.first_name} ${employee.last_name}</strong> <br> <small class="text-muted">${employee.department}</small>`)
+                                .attr("href", "javascript:void(0);")
+                                .click(function () {
+                                    $("#employeeSearch").val(`${employee.first_name} ${employee.last_name}`);
+                                    $("#selectedEmployeeName").text(`${employee.first_name} ${employee.last_name}`);
+                                    $("#attendanceDetails").show();
+                                    resultsBox.hide();
+                                    $("#employeeId").val(employee.id);
+
+                                    $.ajax({
+                                        url: "{% url 'attendance:get_employee_attendance' %}",
+                                        data: { employee_id: employee.id },
+                                        dataType: "json",
+                                        success: function (attendanceData) {
+                                            const timeIn = attendanceData.time_in;
+                                            const timeOut = attendanceData.time_out;
+
+                                            if (timeIn && timeOut) {
+                                                $("#time_in").val(timeIn).prop("disabled", true);
+                                                $("#time_out").val(timeOut).prop("disabled", true);
+                                                $("#status").val("Checked Out");
+                                            } else if (timeIn) {
+                                                $("#time_in").val(timeIn).prop("disabled", true);
+                                                $("#time_out").val("").prop("disabled", false);
+                                                $("#status").val("Checked In");
+                                            } else {
+                                                $("#time_in").val("").prop("disabled", false);
+                                                $("#time_out").val("").prop("disabled", true);
+                                                $("#status").val("Not Checked In");
+                                            }
+                                        },
+                                        error: function () {
+                                            $("#time_in, #time_out").val("").prop("disabled", true);
+                                            $("#status").val("No Record Found");
+                                        }
+                                    });
+                                });
+                            resultsBox.append(item);
+                        });
+                        resultsBox.show();
+                    } else {
+                        resultsBox.append("<a class='dropdown-item disabled'>No results found</a>").show();
+                    }
+                },
+                error: function () {
+                    resultsBox.append("<a class='dropdown-item disabled'>Error fetching results</a>").show();
+                }
+            });
+        } else {
+            $("#attendanceDetails").hide();
+            $("#searchResults").hide();
+        }
+    });
+
+    // Hide dropdown when clicked outside
+    $(document).on("click", function (e) {
+        if (!$(e.target).closest("#employeeSearch, #searchResults, #searchButton").length) {
+            $("#searchResults").hide();
+        }
+    });
+
+    $("#searchButton").click(function () {
+        $("#employeeSearch").trigger("input");
+    });
 });
 </script>
-
 {% endblock %}

@@ -2,17 +2,26 @@ from django.db import models
 from employee.models import Employee
 import datetime
 
+
 class Attendance(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    date = models.DateField(default=datetime.date.today)  # Date field for attendance
-    time_in = models.TimeField(null=True, blank=True)  # Time when the employee clocks in
-    time_out = models.TimeField(null=True, blank=True)  # Time when the employee clocks out
-    method = models.CharField(max_length=10, choices=[("Manual", "Manual"), ("Facial", "Facial")])  # Attendance method
-    status = models.CharField(max_length=20, null=True, blank=True)  # Status: e.g., "On Time", "Late"
-    timestamp = models.DateTimeField(auto_now_add=True)  # Timestamp for when the record was created
+    # Date field for attendance
+    date = models.DateField(default=datetime.date.today)
+    # Time when the employee clocks in
+    time_in = models.TimeField(null=True, blank=True)
+    # Time when the employee clocks out
+    time_out = models.TimeField(null=True, blank=True)
+    method = models.CharField(max_length=10, choices=[(
+        "Manual", "Manual"), ("Facial", "Facial")])  # Attendance method
+    # Status: e.g., "On Time", "Late"
+    status = models.CharField(max_length=20, null=True,
+                              blank=True, default="Absent")
+    # Timestamp for when the record was created
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('employee', 'date')  # Prevent duplicate attendance records for the same day
+        # Prevent duplicate attendance records for the same day
+        unique_together = ('employee', 'date')
 
     def __str__(self):
         return f"Attendance for {self.employee.display_employee_id} on {self.date}"
@@ -36,4 +45,3 @@ class Attendance(models.Model):
             elif self.status != "Late":  # Only set "On Time" if not late already
                 self.status = "On Time"
         super().save(*args, **kwargs)
-

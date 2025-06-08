@@ -7,7 +7,7 @@ class CustomPasswordResetView(PasswordResetView):
     template_name = 'registration/password_reset_form.html'  # Replace with your template path
     email_template_name = 'registration/password_reset_email.html'
     subject_template_name = 'registration/password_reset_subject.txt'
-    success_url = '/accounts/password_reset_done/'  # Replace with your success URL
+    success_url = '/accounts/password_reset/done'  # Replace with your success URL
 
 
 def password_reset(request):

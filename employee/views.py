@@ -87,7 +87,7 @@ def capture_face(request, employee_id):
         username = employee.work_email
         temp_password = "".join(random.choices(string.ascii_letters + string.digits, k=10))
         # Assuming send_welcome_email is defined elsewhere
-        # send_welcome_email(employee, username, temp_password)
+        send_welcome_email(employee, username, temp_password)
         return render(request, "employee/facial_registration_success.html", {"employee": employee})
 
     current_angle = ANGLES[angle_index]
@@ -204,14 +204,14 @@ def send_welcome_email(employee, username, temp_password):
     employee.is_active = True  # Activate the employee
     employee.save()  # Save the changes
 
-    subject = "Welcome to Employee Management System"
+    subject = "Welcome to the Company- Account Created"
     message = (
         f"Hello {employee.first_name},\n\n"
         f"Your account has been successfully created.\n\n"
         f"🔹 email: {employee.work_email}\n"
         f"🔹 Temporary Password: {temp_password}\n\n"
         f"Please login and reset your password immediately.\n\n"
-        f"🔗 Employee Portal: http://127.0.0.1:8000/employee_portal/login/\n\n"
+        f"🔗 Employee Portal: http://127.0.0.1:8000/\n\n"
         f"Best Regards,\nHR Department\nS and S Steels"
     )
     print(f"📧 Sending welcome email to {employee.work_email} and password {temp_password}")
@@ -267,9 +267,10 @@ def employee_list(request):
 
 @user_passes_test(is_hr_or_admin)
 def employee_detail(request, employee_id):
-    # Use 'id' field for querying the employee
+    # Use 'display_employee_id' field for querying the employee
     employee = get_object_or_404(Employee, id=employee_id)
     return render(request, 'employee/employee_detail.html', {'employee': employee})
+
 
 
 
@@ -278,17 +279,19 @@ def employee_edit(request, employee_id):
     employee = get_object_or_404(Employee, display_employee_id=employee_id)
     
     if request.method == "POST":
-        form = EmployeeForm(request.POST, instance=employee)
+        form = EmployeeForm(request.POST, instance=employee, is_edit=True)  # Pass is_edit=True
         if form.is_valid():
             form.save()
             messages.success(request, "Employee details updated successfully.", extra_tags="edit_success")
-
-            return redirect("employee:employee_detail", employee_id=employee.display_employee_id)  
+            return redirect("employee:employee_detail", employee_id=employee.id)
     else:
-        form = EmployeeForm(instance=employee)
+        form = EmployeeForm(instance=employee, is_edit=True)  # Pass is_edit=True here too
 
-    return render(request, "employee/employee_form.html", {"form": form, "employee": employee, "action": "Edit"})
-
+    return render(
+        request,
+        "employee/employee_form.html",
+        {"form": form, "employee": employee, "action": "Edit"}
+    )
 
 
 @user_passes_test(is_hr_or_admin)
